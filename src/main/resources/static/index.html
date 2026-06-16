@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Contract Auditor</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI'; 
+            background-color: #121212; 
+            color: #ffffff; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            padding: 50px; 
+        }
+        h1 { color: #00ffcc; }
+        p { color: #aaaaaa; }
+        textarea { 
+            width: 100%; 
+            max-width: 700px; 
+            height: 250px; 
+            background-color: #1e1e1e; 
+            color: #00ffcc; 
+            border: 1px solid #333; 
+            padding: 15px; 
+            border-radius: 8px; 
+            font-family: monospace; 
+            resize: vertical; 
+        }
+        textarea:focus { outline: none; border-color: #00ffcc; }
+        button { 
+            background-color: #00ffcc; 
+            color: #121212; 
+            border: none; 
+            padding: 12px 24px; 
+            margin-top: 20px; 
+            font-size: 16px; 
+            font-weight: bold; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            transition: 0.3s; 
+        }
+        button:hover { background-color: #00ccaa; }
+        #result { 
+            margin-top: 30px; 
+            width: 100%; 
+            max-width: 700px; 
+            background-color: #1e1e1e; 
+            padding: 20px; 
+            border-radius: 8px; 
+            border: 1px solid #333; 
+            white-space: pre-wrap; 
+            font-family: monospace; 
+            display: none; 
+            color: #ff5555;
+        }
+        .loading { 
+            color: #00ffcc; 
+            font-style: italic; 
+            display: none; 
+            margin-top: 20px; 
+        }
+        .testcode{
+            border: 1px solid gray;
+            border-radius: 10px;
+            margin: 10px;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1> AI Smart Contract Auditor</h1>
+    <p>Paste your raw Solidity code</p>
+
+    <textarea id="contractCode" placeholder="contract Vulnerable {}"></textarea>
+    <button onclick="scanContract()">Scan for Vulnerabilities</button>
+
+    <div id="loading" class="loading">Initiating AI Security Audit... Please wait.</div>
+    <div id="result"></div>
+    <p class="disclaimer">⚠️ Note: The AI analysis engine sometimes experience high demand. If the scan fails or times out, please wait a few seconds and try again.</p>
+    <div class="testcode">
+        <h4>Sample Code For Testing Only</h4>
+        {
+            "contractCode": "contract Vulnerable { mapping(address => uint) public balances; function withdraw() public { uint bal = balances[msg.sender]; require(bal > 0); (bool sent, ) = msg.sender.call{value: bal}(\"\"); require(sent, \"Failed to send Ether\"); balances[msg.sender] = 0; } }"
+          }
+    </div>
+    <script>
+        async function scanContract() {
+            const code = document.getElementById('contractCode').value;
+            const resultDiv = document.getElementById('result');
+            const loadingDiv = document.getElementById('loading');
+
+            if (!code.trim()) {
+                alert("Bro, you need to enter some code first.");
+                return;
+            }
+
+            resultDiv.style.display = 'none';
+            loadingDiv.style.display = 'block';
+
+            try {
+               
+                const response = await fetch('http://localhost:8080/api/audit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contractCode: code })
+                });
+
+                const data = await response.text();
+                resultDiv.textContent = data;
+                resultDiv.style.display = 'block';
+            } catch (error) {
+                resultDiv.textContent = "Error: Cannot connect to the local Spring Boot server. Is it running?";
+                resultDiv.style.display = 'block';
+            } finally {
+                loadingDiv.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
